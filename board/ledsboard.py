@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # ## #############################################################
-# board.py
+# ledsboard.py
 #
-# Author: Mauricio Matamoros
+# Author:  Mauricio Matamoros
 # Licence: MIT
-# Date:
+# Date:    2020.03.01
 #
 # ## #############################################################
 
@@ -22,7 +22,7 @@ from .led import LED
 from .sevenseg import SevenSeg
 from .bcd7seg import BCD7Seg
 
-class Board:
+class LedsBoard:
 	def __init__(self):
 
 		# GUI
@@ -109,5 +109,8 @@ class Board:
 			self._io_pins[pin] = cable[pin]
 		# end for
 	# end def
+
+	def close(self):
+		self._on_closing()
 
 

@@ -20,14 +20,4 @@
     {
         "tab_size": 4,
     },
-
-
-
-    "build_systems":
-    [
-        {
-            "name": "Test",
-            "shell_cmd": "python3",
-        }
-    ]
 }

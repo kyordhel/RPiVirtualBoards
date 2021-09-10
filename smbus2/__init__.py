@@ -9,5 +9,5 @@
 #
 # ## #############################################################
 
-from .ledsboard import LedsBoard
-from .tboard import TemperatureBoard
+from .smbus import *
+from .vi2cbus import *
