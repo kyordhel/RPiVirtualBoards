@@ -25,12 +25,36 @@ from .sevenseg import SevenSeg
 from .bcd7seg import BCD7Seg
 from smbus2 import Vi2cSlave
 
+def _format_r(r):
+	mod = "k"
+	if r < 1:
+		r*=1000
+		mod = ""
+	elif r >= 1000:
+		r/=1000
+		mod = "M"
+	elif r >= 1000000:
+		r/=1000000
+		mod = G
+	return "{:.0f}{}Ω".format(r, mod)
+
 class TemperatureBoard(Vi2cSlave):
-	def __init__(self):
+	def __init__(self, r1=1, r2=100000, p8bits=False, freq=10):
 		super().__init__(10)
 		self._templock = Lock()
 		self._temp = 0
 		self._data = None
+		# Calculate Vref+
+		self._r1 = r1
+		self._r2 = r2
+		self._vref = 5 * r2 / (r2+r1)
+		# ADC bits
+		self._bits = 8 if p8bits else 10
+		# Conversion factor: 1°C = 0.01V, range 0–150
+		self._factor = 0.01 * (2**self._bits) / self._vref
+		# ADC frequency
+		self._freq = freq
+
 
 		# GUI
 		random.seed(time.time())
@@ -51,7 +75,7 @@ class TemperatureBoard(Vi2cSlave):
 
 	def _initialize_components(self):
 		# set window size
-		self.gui.geometry("250x120")
+		self.gui.geometry("450x120")
 		#set window color
 		self.gui.configure(bg="#000000")
 		self.gui.protocol("WM_DELETE_WINDOW", self._on_closing)
@@ -61,6 +85,10 @@ class TemperatureBoard(Vi2cSlave):
 		self.strTempS = StringVar(self.gui)
 		self.strDataS = StringVar(self.gui)
 		self.strSFreq = StringVar(self.gui)
+		self.strADCR1 = StringVar(self.gui)
+		self.strADCR2 = StringVar(self.gui)
+		self.strADCVR = StringVar(self.gui)
+		self.strADCbt = StringVar(self.gui)
 
 		# Validators
 		validatetemp = self.gui.register(self._validatetemp)
@@ -93,6 +121,31 @@ class TemperatureBoard(Vi2cSlave):
 			width=10, state="readonly", textvariable=self.strDataS)
 
 
+
+		self.lblADCR1 = Label(self.gui, anchor="w",
+			bg="#000000", fg="#e0e0e0",
+			text="ADC R1:")
+		self.txtADCR1 = Entry(self.gui, justify="right",
+			width=10, state="disabled", textvariable=self.strADCR1)
+
+		self.lblADCR2 = Label(self.gui, anchor="w",
+			bg="#000000", fg="#e0e0e0",
+			text="ADC R2:")
+		self.txtADCR2 = Entry(self.gui, justify="right",
+			width=10, state="disabled", textvariable=self.strADCR2)
+
+		self.lblADCVR = Label(self.gui, anchor="w",
+			bg="#000000", fg="#e0e0e0",
+			text="ADC Vref+:")
+		self.txtADCVR = Entry(self.gui, justify="right",
+			width=10, state="disabled", textvariable=self.strADCVR)
+
+		self.lblADCbt = Label(self.gui, anchor="w",
+			bg="#000000", fg="#e0e0e0",
+			text="ADC bits:")
+		self.txtADCbt = Entry(self.gui, justify="right",
+			width=10, state="disabled", textvariable=self.strADCbt)
+
 		# Control initialization
 		self.lblTempR.grid(row=0, column=0, sticky="w", padx=2, pady=2)
 		self.txtTempR.grid(row=0, column=1, sticky="w", padx=2, pady=2)
@@ -103,10 +156,22 @@ class TemperatureBoard(Vi2cSlave):
 		self.lblDataS.grid(row=3, column=0, sticky="w", padx=2, pady=2)
 		self.txtDataS.grid(row=3, column=1, sticky="w", padx=2, pady=2)
 
+		self.lblADCR1.grid(row=0, column=2, sticky="w", padx=(30, 2), pady=2)
+		self.txtADCR1.grid(row=0, column=3, sticky="w", padx=( 2, 2), pady=2)
+		self.lblADCR2.grid(row=1, column=2, sticky="w", padx=(30, 2), pady=2)
+		self.txtADCR2.grid(row=1, column=3, sticky="w", padx=( 2, 2), pady=2)
+		self.lblADCVR.grid(row=2, column=2, sticky="w", padx=(30, 2), pady=2)
+		self.txtADCVR.grid(row=2, column=3, sticky="w", padx=( 2, 2), pady=2)
+		self.lblADCbt.grid(row=3, column=2, sticky="w", padx=(30, 2), pady=2)
+		self.txtADCbt.grid(row=3, column=3, sticky="w", padx=( 2, 2), pady=2)
 
 		self.strTempR.set("22.0")
 		self.strTempS.set("0.0")
-		self.strSFreq.set("3")
+		self.strSFreq.set(self._freq)
+		self.strADCR1.set(_format_r(self._r1))
+		self.strADCR2.set(_format_r(self._r2))
+		self.strADCVR.set("{:.2f}V".format(self._vref))
+		self.strADCbt.set(self._bits)
 		# Create canvas
 		# self.canvas = Canvas(self.gui, width=510, height=270, bg='#296e01', bd=0, highlightthickness=0, relief='ridge')
 		# self.canvas.pack()
@@ -182,7 +247,8 @@ class TemperatureBoard(Vi2cSlave):
 		except:
 			pass
 
-		temp += 0.01 * random.randint(-50, 50)
+		temp += 0.01 * random.randint(-100, 100)
+		temp = max(min(temp, 150), 0)
 		self._templock.acquire()
 		self._temp = temp
 		self._templock.release()
@@ -204,10 +270,23 @@ class TemperatureBoard(Vi2cSlave):
 		self._on_closing()
 
 	def read(self):
-		"""Reads a byte stream from the slave"""
+		"""Master reads a byte stream from the slave"""
 		self._templock.acquire()
-		self._data = struct.pack("<f", self._temp)
+		# Get digital value of temperature
+		adcval = int(self._temp * self._factor)
 		self._templock.release()
+
+		# Encode data (H = 2 byte unsigned short, f = 4 byte float)
+		# self._data = struct.pack("<f", self._temp)
+		adcval = max(min(adcval, 2**self._bits -1), 0)
+		fmt = "<Q"
+		if self._bits <= 8:
+			fmt = "<B"
+		elif self._bits <= 16:
+			fmt = "<H"
+		elif self._bits <= 32:
+			fmt = "<I"
+		self._data = struct.pack(fmt, adcval)
 
 		try:
 			self.gui.event_generate("<<UpdateData>>", when="tail")
@@ -217,8 +296,9 @@ class TemperatureBoard(Vi2cSlave):
 	#end def
 
 	def write(self, value):
-		"""Writes byte stream to the slave"""
+		"""Master writes byte stream to the slave"""
 		# Sets the ADC frequency (capped to 100Hz)
+		return
 		freq = struct.unpack('<f', value)
 		if freq > 100:
 			freq = 100

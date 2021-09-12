@@ -8,7 +8,7 @@
 # Date:    2020.03.01
 # 
 # Reads temperature from a LM35 interfaced via an Arduino ADC
-# connected as I²C slave.
+# connected as I2C slave.
 #
 # ## #############################################################
 
@@ -19,7 +19,7 @@ import time
 # Initializes virtual board (comment out for hardware deploy)
 from virtualboards import run_temperature_board
 
-# Arduino’s I2C device address
+# Arduino's I2C device address
 SLAVE_ADDR = 0x0A # I2C Address of Arduino
 
 # Name of the file in which the log is kept
@@ -30,22 +30,22 @@ LOG_FILE = './temp.log'
 i2c = smbus2.SMBus(1)
 
 def readTemperature():
-	"""Reads a temperature value from the Arduino via I²C"""
-	# try:
-	msg = smbus2.i2c_msg.read(SLAVE_ADDR, 4)
-	i2c.i2c_rdwr(msg)
-	data = list(msg)
-	temp = struct.unpack('<f', msg.buf)[0]
-	print('Received temp: {} = {:0.2f}'.format(data, temp))
-	return temp
-	# except:
-	# 	return None
+	"""Reads a temperature bytes from the Arduino via I2C"""
+	try:
+		msg = smbus2.i2c_msg.read(SLAVE_ADDR, 1)
+		i2c.i2c_rdwr(msg)
+		data = list(msg)
+		temp = struct.unpack('<B', msg.buf)[0]
+		print('Received ADC temp value: {} = {:0.2f}'.format(data, temp))
+		return temp
+	except:
+		return None
 #end def
 
 def log_temp(temperature):
 	try:
 		with open(LOG_FILE, 'a') as fp:
-			fp.write('{} {:0.2f}°C\n'.format(
+			fp.write('{} {:0.2f}C\n'.format(
 				time.strftime("%Y.%m.%d %H:%M:%S"),
 				temperature
 			))
@@ -55,7 +55,7 @@ def log_temp(temperature):
 
 def main():
 	# Runs virtual board (comment out for hardware deploy)
-	run_temperature_board()
+	run_temperature_board(r1=1, r2=10000, p8bits=True)
 	time.sleep(1)
 
 	while True:

@@ -38,7 +38,7 @@ def exit_handler():
 
 
 
-def _async_board_worker():
+def _async_board_worker(*args, **kwargs):
 	global _async_board_thread
 	global _board
 
@@ -46,7 +46,7 @@ def _async_board_worker():
 		_board = LedsBoard()
 		_board.connect(GPIO._io_pins)
 	elif _board_type == 'temp':
-		_board = TemperatureBoard()
+		_board = TemperatureBoard(*args, **kwargs)
 	elif _board_type == 'dimm':
 		return
 	elif _board_type == 'ctrl':
@@ -63,9 +63,12 @@ def _async_board_worker():
 
 
 
-def _setup():
+def _setup(*args, **kwargs):
 	global _async_board_thread
-	_async_board_thread = Thread(target=_async_board_worker)
+	_async_board_thread = Thread(
+		target = _async_board_worker,
+		args = args,
+		kwargs = kwargs)
 	_async_board_thread.daemon = True
 	register(exit_handler)
 # end def
@@ -90,9 +93,10 @@ def run_led_board():
 
 
 
-def run_temperature_board():
+def run_temperature_board(r1=1, r2=1000, p8bits=False, freq=3):
 	_check_board()
-	_setup()
+	_setup(r1=r1, r2=r2, p8bits=p8bits, freq=freq)
+	# _setup()
 
 	global _board_type
 	_board_type = "temp"
