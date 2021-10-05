@@ -12,8 +12,10 @@
 # ## #############################################################
 
 import sys
+import signal
 from atexit import register
-from threading import Thread
+from threading import Barrier, Event, Thread
+from threading import current_thread, main_thread
 from board import LedsBoard, TemperatureBoard, DimmerBoard
 from tkinter import Tk, mainloop
 import RPi.GPIO as GPIO
@@ -21,21 +23,7 @@ import RPi.GPIO as GPIO
 _board = None
 _board_type = None
 _async_board_thread = None
-
-
-def exit_handler():
-	global _board
-	print('Shutting down board GUI')
-	# try:
-	# 	_board.close()
-	# 	_board = None
-	# except:
-	# 	pass
-	if _async_board_thread:
-		_async_board_thread.join()
-	sys.exit(0)
-# end def
-
+_barrier = Event()# Barrier(2)
 
 
 def _async_board_worker(*args, **kwargs):
@@ -54,7 +42,10 @@ def _async_board_worker(*args, **kwargs):
 	else:
 		return
 
+	_barrier.set()
+
 	try:
+		print("Running GUI")
 		mainloop()
 	except:
 		pass
@@ -70,7 +61,15 @@ def _setup(*args, **kwargs):
 		args = args,
 		kwargs = kwargs)
 	_async_board_thread.daemon = True
-	register(exit_handler)
+# end def
+
+
+
+def _wait_board():
+	_barrier.wait()
+	# if current_thread() is main_thread():
+	# 	signal.signal(signal.SIGINT, _board.close)
+	# 	signal.signal(signal.SIGTERM, _board.close)
 # end def
 
 
@@ -89,6 +88,7 @@ def run_led_board():
 	global _board_type
 	_board_type = "leds"
 	_async_board_thread.start()
+	_wait_board()
 # end def
 
 
@@ -101,6 +101,7 @@ def run_temperature_board(r1=1, r2=1000, p8bits=False, freq=3):
 	global _board_type
 	_board_type = "temp"
 	_async_board_thread.start()
+	_wait_board()
 # end def
 
 
@@ -112,6 +113,7 @@ def run_dimmer_board(address=10, freq=60):
 	global _board_type
 	_board_type = "dimm"
 	_async_board_thread.start()
+	_wait_board()
 # end def
 
 
@@ -123,6 +125,7 @@ def run_tempcontrol_board():
 	global _board_type
 
 	_async_board_thread.start()
+	_wait_board()
 # end def
 
 

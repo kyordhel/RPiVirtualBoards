@@ -23,6 +23,7 @@ from PIL import Image, ImageTk, ImageEnhance
 from .led import LED
 from .sevenseg import SevenSeg
 from .bcd7seg import BCD7Seg
+from .__common import _img, _get_sprites, _set_kill_handler
 from smbus2 import Vi2cSlave
 
 def _format_r(r):
@@ -66,6 +67,7 @@ class TemperatureBoard(Vi2cSlave):
 			self._io_pins[i] = None
 		self._initialize_components()
 		self._setup_timer()
+		_set_kill_handler(self.close)
 		self.running = True
 	# end def
 
@@ -172,19 +174,6 @@ class TemperatureBoard(Vi2cSlave):
 		self.strADCR2.set(_format_r(self._r2))
 		self.strADCVR.set("{:.2f}V".format(self._vref))
 		self.strADCbt.set(self._bits)
-		# Create canvas
-	# end def
-
-	def _draw_canvas(self):
-		self.canvas.delete(ALL)
-		self.canvas.update()
-	# end def
-
-	def _redraw(self):
-		self._update_status()
-		self._draw_canvas()
-		if self.running:
-			self.canvas.after(20, self._redraw)
 	# end def
 
 	def _on_closing(self):
@@ -233,7 +222,9 @@ class TemperatureBoard(Vi2cSlave):
 		try:
 			temp = float(self.strTempR.get())
 		except:
-			pass
+			if self.running:
+				self._setup_timer()
+			return
 
 		temp += 0.01 * random.randint(-100, 100)
 		temp = max(min(temp, 150), 0)
@@ -244,7 +235,9 @@ class TemperatureBoard(Vi2cSlave):
 		try:
 			self.strTempS.set("{:.2f}".format(temp))
 		except:
-			pass
+			if self.running:
+				self._setup_timer()
+			return
 
 		if self.running:
 			self._setup_timer()
@@ -254,7 +247,8 @@ class TemperatureBoard(Vi2cSlave):
 		sdata = "0x" + "".join("{:02x}".format(x) for x in self._data)
 		self.strDataS.set(sdata)
 
-	def close(self):
+	def close(self, *args):
+		print("Shutting down GUI")
 		self._on_closing()
 
 	def read(self):

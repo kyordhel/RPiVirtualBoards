@@ -9,7 +9,8 @@
 #
 # ## #############################################################
 
-
+import signal
+import threading
 from os import path
 from PIL import Image, ImageTk, ImageEnhance
 
@@ -33,3 +34,8 @@ def _get_sprites(path, width, height=None, count=None, scale=1):
 		s = s.resize((int(width*scale), int(height*scale)), Image.ANTIALIAS)
 		sprites.append(s)
 	return sprites
+
+def _set_kill_handler(handler):
+	if threading.current_thread() is threading.main_thread():
+		signal.signal(signal.SIGINT, handler)
+		signal.signal(signal.SIGTERM, handler)

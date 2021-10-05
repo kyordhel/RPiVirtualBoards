@@ -19,8 +19,8 @@ from threading import Thread, Timer, Lock
 from tkinter import *
 from PIL import Image, ImageTk, ImageEnhance
 
-from .__common import _img, _get_sprites
 from smbus2 import Vi2cSlave
+from .__common import _img, _get_sprites, _set_kill_handler
 
 
 class DimmerBoard(Vi2cSlave):
@@ -41,6 +41,7 @@ class DimmerBoard(Vi2cSlave):
 			self._io_pins[i] = None
 		self._sprites = _get_sprites(_img("lightbulb.png"), 680, scale=0.17)
 		self._initialize_components()
+		_set_kill_handler(self.close)
 		self.running = True
 		self.phase = 1000
 	# end def
@@ -158,8 +159,6 @@ class DimmerBoard(Vi2cSlave):
 
 	def _on_closing(self):
 		self.running = False
-		# self.timer.cancel()
-		# self.timer = None
 		self.disconnect()
 		self.gui.destroy()
 		self.gui.quit()
@@ -189,7 +188,8 @@ class DimmerBoard(Vi2cSlave):
 		self.lblLampI.image = img
 	#end def
 
-	def close(self):
+	def close(self, *args):
+		print("Shutting down GUI")
 		self._on_closing()
 	#end def
 

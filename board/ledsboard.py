@@ -21,6 +21,7 @@ from PIL import Image, ImageTk, ImageEnhance
 from .led import LED
 from .sevenseg import SevenSeg
 from .bcd7seg import BCD7Seg
+from .__common import _img, _get_sprites, _set_kill_handler
 
 class LedsBoard:
 	def __init__(self):
@@ -35,6 +36,7 @@ class LedsBoard:
 		for i in range(1, 28):
 			self._io_pins[i] = None
 		self._initialize_components()
+		_set_kill_handler(self.close)
 		self.running = True
 	# end def
 
@@ -68,6 +70,8 @@ class LedsBoard:
 	# end def
 
 	def _redraw(self):
+		if not self.running:
+			return
 		self._update_status()
 		self._draw_canvas()
 		if self.running:
@@ -110,7 +114,8 @@ class LedsBoard:
 		# end for
 	# end def
 
-	def close(self):
+	def close(self, *args):
+		print("Shutting down GUI")
 		self._on_closing()
 
 
