@@ -12,14 +12,15 @@
 from tkinter import *
 from PIL import Image, ImageTk, ImageEnhance
 
-from .__common import _img
+from .__common import _img, _get_sprites
 
 class LED:
 	def __init__(self):
+		sprites = _get_sprites(_img("ledr.png"), 50)
 		self._on = False
-		self._bg = PhotoImage(file=_img('led-background.png'))
-		self._fg = PhotoImage(file=_img('led-foreground.png'))
-		self._im = PhotoImage(file=_img('led-bright.png'))
+		self._bg = ImageTk.PhotoImage(sprites[0])
+		self._fg = ImageTk.PhotoImage(sprites[1])
+		self._im = ImageTk.PhotoImage(sprites[2])
 	# end def
 
 

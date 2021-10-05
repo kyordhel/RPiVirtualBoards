@@ -19,22 +19,8 @@ from threading import Thread, Timer, Lock
 from tkinter import *
 from PIL import Image, ImageTk, ImageEnhance
 
-from .__common import _img
+from .__common import _img, _get_sprites
 from smbus2 import Vi2cSlave
-
-
-
-def _get_sprites(scale=1):
-	width = 680
-	height = 829
-	sprites = []
-	im = Image.open(_img('lightbulb.png'))
-	for i in range(11):
-		s = im.crop( (i * width, 0, (i+1) * width, height) )
-		s = s.resize((int(width*scale), int(height*scale)), Image.ANTIALIAS)
-		sprites.append(s)
-	return sprites
-
 
 
 class DimmerBoard(Vi2cSlave):
@@ -47,13 +33,13 @@ class DimmerBoard(Vi2cSlave):
 		self._data = [0, 0, 0, 0]
 
 		# GUI
-		self.gui = Tk(className=' Lamp Control Board')
+		self.gui = Tk(className=" Lamp Control Board")
 		self.gui.bind("<<UpdateGUI>>", self._update_gui)
 		self._io_pins = {}
 		self.controls = {}
 		for i in range(1, 28):
 			self._io_pins[i] = None
-		self._sprites = _get_sprites(scale=0.17)
+		self._sprites = _get_sprites(_img("lightbulb.png"), 680, scale=0.17)
 		self._initialize_components()
 		self.running = True
 		self.phase = 1000

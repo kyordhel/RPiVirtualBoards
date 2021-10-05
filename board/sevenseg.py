@@ -12,20 +12,21 @@
 from tkinter import *
 from PIL import Image, ImageTk, ImageEnhance
 
-from .__common import _img
+from .__common import _img, _get_sprites
 
 class SevenSeg:
 	def __init__(self):
-		self._bgi = PhotoImage(file=_img('7s-background.png'))
-		self._fgi = PhotoImage(file=_img('7s-foreground.png'))
-		self._sai = PhotoImage(file=_img('7s-a.png'))
-		self._sbi = PhotoImage(file=_img('7s-b.png'))
-		self._sci = PhotoImage(file=_img('7s-c.png'))
-		self._sdi = PhotoImage(file=_img('7s-d.png'))
-		self._sei = PhotoImage(file=_img('7s-e.png'))
-		self._sfi = PhotoImage(file=_img('7s-f.png'))
-		self._sgi = PhotoImage(file=_img('7s-g.png'))
-		self._dpi = PhotoImage(file=_img('7s-dp.png'))
+		sprites = _get_sprites(_img("7s.png"), 116)
+		self._bgi = ImageTk.PhotoImage(sprites[0])
+		self._fgi = ImageTk.PhotoImage(sprites[1])
+		self._sai = ImageTk.PhotoImage(sprites[2])
+		self._sbi = ImageTk.PhotoImage(sprites[3])
+		self._sci = ImageTk.PhotoImage(sprites[4])
+		self._sdi = ImageTk.PhotoImage(sprites[5])
+		self._sei = ImageTk.PhotoImage(sprites[6])
+		self._sfi = ImageTk.PhotoImage(sprites[7])
+		self._sgi = ImageTk.PhotoImage(sprites[8])
+		self._dpi = ImageTk.PhotoImage(sprites[9])
 		self.a = 0
 		self.b = 0
 		self.c = 0

@@ -9,15 +9,17 @@
 #
 # ## #############################################################
 
+from .ledsboard import LedsBoard
 from .tboard import TemperatureBoard
 from .dboard import DimmerBoard
 from .tcboard import TempCtrlBoard
 from tkinter import mainloop
 
 def main():
-	# board = TempCtrlBoard()
+	board = LedsBoard()
 	# board = TemperatureBoard()
-	board = DimmerBoard()
+	# board = DimmerBoard()
+	# board = TempCtrlBoard()
 	mainloop()
 
 if __name__ == '__main__':
