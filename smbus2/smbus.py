@@ -412,6 +412,8 @@ class i2c_msg:
 		msg._addr = address
 		if isinstance(buf, str):
 			msg._buf = bytearray(buf.encode())
+		elif isinstance(buf, int) or isinstance(buf, float):
+			raise ValueError("Expected a packed bytearray object")
 		else:
 			msg._buf = buf
 		msg._len = len(msg._buf)

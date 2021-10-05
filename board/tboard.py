@@ -173,22 +173,10 @@ class TemperatureBoard(Vi2cSlave):
 		self.strADCVR.set("{:.2f}V".format(self._vref))
 		self.strADCbt.set(self._bits)
 		# Create canvas
-		# self.canvas = Canvas(self.gui, width=510, height=270, bg='#296e01', bd=0, highlightthickness=0, relief='ridge')
-		# self.canvas.pack()
-		# self._draw_canvas()
-		# self.canvas.after(1, self._redraw)
 	# end def
 
 	def _draw_canvas(self):
 		self.canvas.delete(ALL)
-		# Add 7-segments to canvas
-		# self.sevenSeg.draw(self.canvas, 197, 90)
-		# Add LEDs to canvas
-		# xpos = 20
-		# ypos = 20
-		# for led in self.leds:
-		# 	led.draw(self.canvas, xpos, ypos)
-		# 	xpos += 60
 		self.canvas.update()
 	# end def
 

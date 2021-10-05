@@ -11,3 +11,4 @@
 
 from .ledsboard import LedsBoard
 from .tboard import TemperatureBoard
+from .dboard import DimmerBoard

@@ -14,7 +14,7 @@
 import sys
 from atexit import register
 from threading import Thread
-from board import LedsBoard, TemperatureBoard
+from board import LedsBoard, TemperatureBoard, DimmerBoard
 from tkinter import Tk, mainloop
 import RPi.GPIO as GPIO
 
@@ -48,7 +48,7 @@ def _async_board_worker(*args, **kwargs):
 	elif _board_type == 'temp':
 		_board = TemperatureBoard(*args, **kwargs)
 	elif _board_type == 'dimm':
-		return
+		_board = DimmerBoard(*args, **kwargs)
 	elif _board_type == 'ctrl':
 		return
 	else:
@@ -105,11 +105,12 @@ def run_temperature_board(r1=1, r2=1000, p8bits=False, freq=3):
 
 
 
-def run_dimmer_board():
+def run_dimmer_board(address=10, freq=60):
 	_check_board()
-	_setup()
+	_setup(address=address, frequency=freq)
 
 	global _board_type
+	_board_type = "dimm"
 	_async_board_thread.start()
 # end def
 
